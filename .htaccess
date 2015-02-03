@@ -2,8 +2,3 @@
 DirectoryIndex api.php
 
 # REST API rewrite rules
-RewriteEngine on
-RewriteRule ^([a-zA-Z0-9_-]+)/$ api.php?module=$1
-RewriteRule ^([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/$ api.php?module=$1&script=$2
-RewriteRule ^([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/(.+)$ api.php?module=$1&script=$2&$3
-RewriteRule ^([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/(.+)/(.+)$ api.php?module=$1&script=$2&id=$3&$4
