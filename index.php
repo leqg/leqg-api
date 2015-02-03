@@ -16,9 +16,9 @@ setlocale(LC_TIME, 'fr_FR.UTF-8', 'fr_FR', 'fr');
 header('Content-Type: application/json; charset=utf-8');
 
 // We setting up autoload class system
-function __autoload($class_name)
+function __autoload($class)
 {
-    require_once "class/$class_name.class.php";
+    require_once 'class/' . strtolower($class) . '.class.php';
 }
  
 // We load configuration file
