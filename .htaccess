@@ -1,4 +1,3 @@
-# Change directory index to api routing file
-DirectoryIndex api.php
-
 # REST API rewrite rules
+RewriteEngine on
+RewriteRule / index.php
