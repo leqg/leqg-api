@@ -1,2 +1,5 @@
-
+# Ignoring config file
 config.ini
+
+# Ignoring webhook file
+webhook.php
