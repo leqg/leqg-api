@@ -31,11 +31,11 @@ $link = new PDO($dsn, $configuration['db']['user'], $configuration['db']['pass']
 // We save in configuration class the SQL link
 Configuration::write('db.link', $link);
 
-// We load API class
-$api = new API();
+// We initiate API processing
+API::init();
 
 // We parse API result to JSON format
-$api->parsing();
+API::parsing();
 
 // We display API result and return HTTP response code
-$api->result();
+API::result();

@@ -14,11 +14,11 @@ class API
      * @val     array   $json       JSON array to send
      * @val     bool    $errors     Errors informations
      */
-    private $data = array();
-    private $success = true;
-    private $response = 202;
-    private $json;
-    private $errors = array();
+    private static $data = array();
+    private static $success = true;
+    private static $response = 202;
+    private static $json;
+    private static $errors = array();
     
     
     /**
@@ -31,9 +31,9 @@ class API
      * @return  void
      */
     
-    public function __construct()
+    public static function init()
     {
-        
+        return true;
     }
     
     
@@ -46,18 +46,18 @@ class API
      * @return  void
      */
     
-    public function parsing()
+    public static function parsing()
     {
-        switch ($this->success) {
+        switch (self::$success) {
             case true:
                 // if API call is a success, we merge system informations and datas
                 $json = array('success' => true);
                 
                 // we check if we have informations to send
-                if ($this->data) { $json['data'] = $this->data; }
+                if (self::$data) { $json['data'] = self::$data; }
                 
                 // we parse data in a json format
-                $this->json = json_encode($json);
+                self::$json = json_encode($json);
                 
                 break;
             
@@ -65,11 +65,11 @@ class API
                 // if API call returns an error, we parse error's informations in JSON
                 $result = array(
                     'success' => false,
-                    'error' => $this->errors
+                    'error' => self::$errors
                 );
                 
                 // we check if we have informations to send
-                if ($this->data) { $json['data'] = $this->data; }
+                if (self::$data) { $json['data'] = self::$data; }
                 
                 break;
         }
@@ -83,12 +83,12 @@ class API
      * @return  void
      */
     
-    public function result()
+    public static function result()
     {
         // we send http response code
-        http_response_code($this->response);
+        http_response_code(self::$response);
         
         // we display json string
-        print_r($this->json);
+        print_r(self::$json);
     }
 }
