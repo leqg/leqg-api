@@ -46,6 +46,12 @@ class API
         self::$headers = getallheaders();
         self::$body = json_decode(file_get_contents('php://input'));
         
+        // we check if request method is OPTIONS to send just headers without content
+        if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+            self::parsing();
+            self::result();
+        }
+        
         // we search asked module & methods
         if (isset($_SERVER['PATH_INFO'])) {
             $path = substr($_SERVER['PATH_INFO'], 1);
