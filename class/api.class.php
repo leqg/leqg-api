@@ -47,9 +47,13 @@ class API
         self::$body = json_decode(file_get_contents('php://input'));
         
         // we search asked module & methods
-        $path = substr($_SERVER['PATH_INFO'], 1);
-        self::$module = explode('/', $path);
-
+        if (isset($_SERVER['PATH_INFO'])) {
+            $path = substr($_SERVER['PATH_INFO'], 1);
+            self::$module = explode('/', $path);
+        } else {
+            self::$module = array();
+        }
+        
         // we check if a token exist and we store it
         if (isset(self::$headers['Authorization']) && substr(self::$headers['Authorization'], 0, 4) == Configuration::read('token')) {
             $token = explode(' ', self::$headers['Authorization']);
