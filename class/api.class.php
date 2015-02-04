@@ -17,8 +17,9 @@ class API
      * @val     bool    $success    API call status (true success, false error)
      * @val     int     $response   HTTP response code to send with JSON
      */
-    private static $token, $user, $client, $json, $error;
+    private static $token, $user, $client, $json;
     private static $data = array();
+    private static $errors = array();
     private static $success = true;
     private static $response = 202;
     
@@ -232,17 +233,22 @@ class API
      * Store an error into the API result, display it and stop script execution
      * 
      * @version 1.0
-     * @param   string  $code       HTTP Error code to send with JSON
-     * @param   string  $message    Error message
+     * @param   string  $http_response  HTTP Error code to send with JSON
+     * @param   string  $code           Error code
+     * @param   string  $message        Error message
      * @result  void
      */
     
-    public static function error($code, $message)
+    public static function error($http_response, $code, $message)
     {
         // we store error data
         self::$success = false;
-        self::$response = $code;
-        self::$error = $message;
+        self::$response = $http_response;
+        self::$errors[] = array(
+            'status' => $http_response,
+            'code' => $code,
+            'title' => $message
+        );
         
         // we parse JSON
         self::parsing();
@@ -267,7 +273,7 @@ class API
     public static function parsing()
     {
         // we initiate JSON array
-        $json = array('success' => self::$success);
+        $json = array();
         
         // if we have a token, we add token in json response
         if (!empty(self::$token)) {
@@ -279,7 +285,9 @@ class API
         }
         
         switch (self::$success) {
-            case true:                
+            case true:
+                $json['success'] = true;
+            
                 // we check if we have informations to send
                 if (count(self::$data)) { $json['data'] = self::$data; }
                 
@@ -287,7 +295,7 @@ class API
             
             case false:
                 // if API call returns an error, we parse error's informations in JSON
-                $json['error'] = self::$error;
+                $json['errors'] = self::$errors;
                 $json['method'] = $_SERVER['REQUEST_METHOD'];
                 
                 // we check if we have informations to send
