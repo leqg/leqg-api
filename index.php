@@ -17,6 +17,8 @@ header('Content-Type: application/json; charset=utf-8');
 
 // We allow cross domain request
 header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Headers: Authorization');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 
 // We set autoload class
 function __autoload($class)
