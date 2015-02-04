@@ -48,7 +48,7 @@ try {
 }
 
 // We check if authorization is asked
-if (!isset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW'])) {
+if (isset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW'])) {
     // if it is, we check authentification information
     API::auth();
 }

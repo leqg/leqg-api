@@ -62,9 +62,8 @@ class API
     public static function auth()
     {
         // we charge login data
-        //$user = $_SERVER['PHP_AUTH_USER'];
-        //$pass = $_SERVER['PHP_AUTH_PW'];
-        $user = 'mail@damiensenger.me'; $pass = 'evecsanobi-67';
+        $user = $_SERVER['PHP_AUTH_USER'];
+        $pass = $_SERVER['PHP_AUTH_PW'];
         
         // we check if this user exist in LeQG Central Auth DB
         $query = self::dbcore('auth_login');
