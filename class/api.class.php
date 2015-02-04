@@ -296,7 +296,6 @@ class API
             case false:
                 // if API call returns an error, we parse error's informations in JSON
                 $json['errors'] = self::$errors;
-                $json['method'] = $_SERVER['REQUEST_METHOD'];
                 
                 // we check if we have informations to send
                 if (count(self::$data)) { $json['data'] = self::$data; }
@@ -309,6 +308,7 @@ class API
         if (isset($headers['X-Debug']) && $headers['X-Debug']) {
             // we initiate json debug result
             $json['debug'] = array();
+            $json['debug']['method'] = $_SERVER['REQUEST_METHOD'];
             
             // we check if we have some HTTP request data
             if (!empty($_REQUEST)) {
