@@ -155,7 +155,6 @@ class API
                 
             } else {
                 // if we have no token and no authentification try
-                header('WWW-Authenticate: Basic realm="LeQG App Authorization"');
                 self::error(401, 'NoToken', 'No token, please send one or authenticate yourself.');
             }
             
@@ -346,6 +345,9 @@ class API
     
     public static function result()
     {
+        // we send an authorization demand
+        if (self::$response == 401) { header('WWW-Authenticate: Basic realm="LeQG App Authorization"'); }
+        
         // we send http response code
         http_response_code(self::$response);
 
