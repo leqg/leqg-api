@@ -51,6 +51,12 @@ try {
 // We check if authorization is asked or if a valid token exist
 API::auth();
 
+// Test
+if (isset($_GET['script'])) {
+    API::$data[] = $_GET['script'];
+}
+
+
 // We parse API result to JSON format
 API::parsing();
 

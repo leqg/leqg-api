@@ -20,7 +20,7 @@ class API
      * @val     array   $body       HTTP body request
      */
     private static $token, $user, $client, $json;
-    private static $data = array();
+    public static $data = array();
     private static $errors = array();
     private static $success = true;
     private static $response = 202;
@@ -134,9 +134,7 @@ class API
             // we look if client send a token in HTTP headers
             if (isset(self::$headers['Authorization'])) {
                 $tokenHTTP = explode(' ', self::$headers['Authorization']);
-                $tokenComplet = explode(':', base64_decode($tokenHTTP[1]));
-                $client = $tokenComplet[0];
-                $token = $tokenComplet[1];
+                $token = $tokenHTTP[1];
                 
                 // we check token validity
                 $query = self::dbcore('auth_id_by_token');
@@ -148,7 +146,6 @@ class API
                     $data = $query->fetch();
                     
                     // we store all known informations
-                    self::client($client);
                     self::token($token);
                     self::user($data['id']);
                     
@@ -187,7 +184,7 @@ class API
         // if we have to create a token
         if (is_null($token)) {
             // we generate an uniqid token
-            $token = uniqid(dechex(rand()));
+            $token = uniqid(bin2hex(openssl_random_pseudo_bytes(8)), true);
             
             // we had the token to the core database
             $query = self::dbcore('auth_token_storage');
@@ -278,7 +275,7 @@ class API
     {
         // we initiate JSON array
         $json = array();
-        
+        /*
         // if we have a token, we add token in json response
         if (!empty(self::$token)) {
             // we create a chain by client hostname & token concatenation
@@ -286,7 +283,7 @@ class API
 
             // we add this chain to the JSON result array
             $json['token'] = $chain;
-        }
+        }*/
         
         switch (self::$success) {
             case true:
