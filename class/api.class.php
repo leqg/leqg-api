@@ -286,8 +286,6 @@ class API
         
         switch (self::$success) {
             case true:
-                $json['success'] = true;
-            
                 // we check if we have informations to send
                 if (count(self::$data)) { $json['data'] = self::$data; }
                 
