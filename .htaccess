@@ -1,9 +1,6 @@
 # Turn on URL rewriting
 RewriteEngine On
 
-# Installation directory
-RewriteBase /
-
 # Protect hidden files from being viewed
 <Files .*>
     Order Deny,Allow
@@ -11,7 +8,7 @@ RewriteBase /
 </Files>
 
 # Protect application and system files from being viewed
-#RewriteRule ^(?:class|sql)\b.* /$0 [L]
+RewriteRule ^(?:class|sql)\b.* / [R=403]
 
 # Allow any files or directories that exist to be displayed directly
 RewriteCond %{REQUEST_FILENAME} !-f
