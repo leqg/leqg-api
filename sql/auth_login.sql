@@ -1,0 +1,1 @@
+SELECT `id`, `client`, `password` FROM `compte` WHERE `email` = :mail
