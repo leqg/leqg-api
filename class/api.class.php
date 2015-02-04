@@ -18,6 +18,7 @@ class API
      * @val     int     $response   HTTP response code to send with JSON
      * @val     array   $headers    HTTP header request
      * @val     array   $body       HTTP body request
+     * @val     array   $module     Module and methods asked by client
      */
     private static $token, $user, $client, $json;
     private static $data = array();
@@ -26,6 +27,7 @@ class API
     private static $response = 202;
     private static $headers = array();
     private static $body = array();
+    public  static $module = array();
     
     
     /**
@@ -43,6 +45,10 @@ class API
         // we store HTTP header & body content
         self::$headers = getallheaders();
         self::$body = json_decode(file_get_contents('php://input'));
+        
+        // we search asked module & methods
+        $path = substr($_SERVER['PATH_INFO'], 1);
+        self::$module = explode('/', $path);
 
         // we check if a token exist and we store it
         if (isset(self::$headers['Authorization']) && substr(self::$headers['Authorization'], 0, 4) == Configuration::read('token')) {
@@ -50,12 +56,10 @@ class API
             self::$token = $token[1];
         }
         
-        if (isset($_GET['module']) && $_GET['module'] == 'authenticate') {
-            // we check if an authentication is asked
+        // we check if an authenticate is asked or if client have a valid token
+        if (isset(self::$module[0]) && self::$module[0] == 'authenticate') {
             self::auth();
-            
         } else {
-            // we check token validity
             self::token_auth();
         }
     }
@@ -345,17 +349,6 @@ class API
             // we initiate json debug result
             $json['debug'] = array();
             $json['debug']['method'] = $_SERVER['REQUEST_METHOD'];
-            
-            // we check if we have some HTTP request data
-            if (!empty($_REQUEST)) {
-                $json['debug']['request_data'] = $_REQUEST;
-            }
-            
-            // we check if we have HTTP header for authorization
-            if (isset($_SERVER['PHP_AUTH_USER'])) {
-                $json['debug']['auth']['user'] = $_SERVER['PHP_AUTH_USER'];
-                $json['debug']['auth']['pass'] = $_SERVER['PHP_AUTH_PW'];
-            }
             
             // if we stored a token
             if (!empty(self::$token)) {
