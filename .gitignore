@@ -3,3 +3,6 @@ config.ini
 
 # Ignoring webhook file
 webhook.php
+
+# .htaccess only on server
+.htaccess

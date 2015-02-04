@@ -16,12 +16,16 @@ class API
      * @val     array   $data       Informations to send, before JSON formatting
      * @val     bool    $success    API call status (true success, false error)
      * @val     int     $response   HTTP response code to send with JSON
+     * @val     array   $headers    HTTP header request
+     * @val     array   $body       HTTP body request
      */
     private static $token, $user, $client, $json;
     private static $data = array();
     private static $errors = array();
     private static $success = true;
     private static $response = 202;
+    private static $headers = array();
+    private static $body = array();
     
     
     /**
@@ -36,7 +40,11 @@ class API
     
     public static function init()
     {
-        return true;
+        // HTTP header request storage
+        self::$headers = getallheaders();
+        
+        // HTTP body request storage
+        self::$body = json_decode(file_get_contents('php://input'));
     }
     
     
@@ -77,11 +85,8 @@ class API
     
     public static function auth()
     {
-        // we look at headers informations
-        $headers = getallheaders();
-        
         // if client wants to try an authentification
-        if (isset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']) && !isset($headers['X-Debug'])) {
+        if (isset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']) && !isset(self::$headers['X-Debug'])) {
             // we check if this user exist in LeQG Central Auth DB
             $query = self::dbcore('auth_login');
             $query->bindParam(':mail', $_SERVER['PHP_AUTH_USER']);
@@ -125,11 +130,10 @@ class API
                 self::error(401, 'NoUser', 'User not found');
             }
             
-        } elseif (!isset($headers['X-Debug'])) {
+        } elseif (!isset(self::$headers['X-Debug'])) {
             // we look if client send a token in HTTP headers
-            $headers = getallheaders();
-            if (isset($headers['Authorization'])) {
-                $tokenHTTP = explode(' ', $headers['Authorization']);
+            if (isset(self::$headers['Authorization'])) {
+                $tokenHTTP = explode(' ', self::$headers['Authorization']);
                 $tokenComplet = explode(':', base64_decode($tokenHTTP[1]));
                 $client = $tokenComplet[0];
                 $token = $tokenComplet[1];
@@ -302,8 +306,7 @@ class API
         }
         
         // We look if a debug information is asked
-        $headers = getallheaders();
-        if (isset($headers['X-Debug']) && $headers['X-Debug']) {
+        if (isset(self::$headers['X-Debug']) && self::$headers['X-Debug']) {
             // we initiate json debug result
             $json['debug'] = array();
             $json['debug']['method'] = $_SERVER['REQUEST_METHOD'];
@@ -320,13 +323,8 @@ class API
             }
             
             // we get all headers
-            $json['debug']['headers'] = getallheaders();
-            
-            // we check if we have a token send by HTTP Authorization system
-            if (isset($json['debug']['headers']['Authorization'])) {
-                $token = explode(' ', $json['debug']['headers']['Authorization']);
-                $json['debug']['token'] = $token[1];
-            }
+            $json['debug']['headers'] = self::$headers;
+            $json['debug']['body'] = self::$body;
         }
         
         // we parse json array
@@ -346,12 +344,22 @@ class API
         // we send an authorization demand
         if (self::$response == 401) { header('WWW-Authenticate: Basic realm="LeQG App Authorization"'); }
         
-        // we send http response code
-        http_response_code(self::$response);
-
-        // we display json string
-        print_r(self::$json);
+        // ETag header
+        $etag = md5(self::$json);
         
-        // 
+        // check if client send ETag information & if content etag = client etag
+        if (isset(self::$headers['If-None-Match']) && $etag == self::$headers['If-None-Match']) {
+            http_response_code(304);
+            
+        } else {
+            // we send http response code
+            http_response_code(self::$response);
+            
+            // we send ETag information
+            header('ETag: ' . md5(self::$json));
+    
+            // we display json string
+            print(self::$json);
+        }
     }
 }
