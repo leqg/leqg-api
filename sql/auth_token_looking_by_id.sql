@@ -1,1 +1,1 @@
-SELECT `token` FROM `token` WHERE `id` = :id AND ( `begin` <= NOW() AND `end` >= NOW() )
+SELECT `token` FROM `token` WHERE `id` = :id AND ( `begin` <= NOW() AND `end` >= NOW() ) LIMIT 0, 1

@@ -23,12 +23,12 @@ function __autoload($class)
 {
     require_once 'class/' . strtolower($class) . '.class.php';
 }
-
-// We initiate API processing
-API::init();
  
 // We load configuration file
 $configuration = parse_ini_file('config.ini', true);
+
+// We store token name into Configuration datas
+Configuration::write('token', $configuration['token']['name']);
 
 // We prepare the data source name information for LeQG Core MySQL DB
 $dsn['core'] = 'mysql:host=' . $configuration['core']['host'] . ';port=' . $configuration['core']['port'] . ';dbname=' . $configuration['core']['base'] . ';charset=utf8';
@@ -48,14 +48,8 @@ try {
     exit;
 }
 
-// We check if authorization is asked or if a valid token exist
-API::auth();
-
-// Test
-if (isset($_GET['script'])) {
-    API::$data[] = $_GET['script'];
-}
-
+// We initiate API processing
+API::init();
 
 // We parse API result to JSON format
 API::parsing();

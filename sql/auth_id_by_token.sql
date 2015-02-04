@@ -1,1 +1,1 @@
-SELECT `id` FROM `token` WHERE `token` = :token AND ( `begin` <= NOW() AND `end` >= NOW() )
+SELECT `compte`.`id`, `compte`.`client` FROM `token` LEFT JOIN `compte` ON `compte`.`id` = `token`.`id` WHERE `token` = :token AND ( `begin` <= NOW() AND `end` >= NOW() )

@@ -20,7 +20,7 @@ class API
      * @val     array   $body       HTTP body request
      */
     private static $token, $user, $client, $json;
-    public static $data = array();
+    private static $data = array();
     private static $errors = array();
     private static $success = true;
     private static $response = 202;
@@ -32,7 +32,7 @@ class API
      * API initialization
      * 
      * Launch all needed services to response to API request, first by checking
-     * authentification
+     * token and doing authentication if asked
      * 
      * @version 1.0
      * @return  void
@@ -40,11 +40,24 @@ class API
     
     public static function init()
     {
-        // HTTP header request storage
+        // we store HTTP header & body content
         self::$headers = getallheaders();
-        
-        // HTTP body request storage
         self::$body = json_decode(file_get_contents('php://input'));
+
+        // we check if a token exist and we store it
+        if (isset(self::$headers['Authorization']) && substr(self::$headers['Authorization'], 0, 4) == Configuration::read('token')) {
+            $token = explode(' ', self::$headers['Authorization']);
+            self::$token = $token[1];
+        }
+        
+        if (isset($_GET['module']) && $_GET['module'] == 'authenticate') {
+            // we check if an authentication is asked
+            self::auth();
+            
+        } else {
+            // we check token validity
+            self::token_auth();
+        }
     }
     
     
@@ -86,7 +99,7 @@ class API
     public static function auth()
     {
         // if client wants to try an authentification
-        if (isset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']) && !isset(self::$headers['X-Debug'])) {
+        if (isset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW'])) {
             // we check if this user exist in LeQG Central Auth DB
             $query = self::dbcore('auth_login');
             $query->bindParam(':mail', $_SERVER['PHP_AUTH_USER']);
@@ -116,7 +129,7 @@ class API
                         self::token($data['token']);
                         
                     } else {
-                        // we create a token
+                        // we create and send a new token
                         self::token();
                     }
                     
@@ -130,46 +143,54 @@ class API
                 self::error(401, 'NoUser', 'User not found');
             }
             
-        } elseif (!isset(self::$headers['X-Debug'])) {
-            // we look if client send a token in HTTP headers
-            if (isset(self::$headers['Authorization'])) {
-                $tokenHTTP = explode(' ', self::$headers['Authorization']);
-                $token = $tokenHTTP[1];
-                
-                // we check token validity
-                $query = self::dbcore('auth_id_by_token');
-                $query->bindParam(':token', $token);
-                $query->execute();
-                
-                // si le token est valide
-                if ($query->rowCount() == 1) {
-                    $data = $query->fetch();
-                    
-                    // we store all known informations
-                    self::token($token);
-                    self::user($data['id']);
-                    
-                } else {
-                    // no valid token, please authentificate yourself
-                    self::error(401, 'NonValidToken', 'No valid token, please authenticate yourself.');
-                }
-                
-            } else {
-                // if we have no token and no authentification try
-                self::error(401, 'NoToken', 'No token, please send one or authenticate yourself.');
-            }
-            
         } else {
-            // if a debug request is asked, we load request with dev user
-            self::client('dev');
-            self::user(1);
-            self::token();
+            // no connection data found
+            self::error(401, 'NoUserPW', 'We did not receive user and password information');
         }
     }
     
     
     /**
-     * Store or create a token
+     * Token validation
+     * 
+     * Check if a token is valid
+     *
+     * @version 1.0
+     * @param   string  $token      Token to check
+     * @result  void
+     */
+    
+    public static function token_auth()
+    {
+        // we look if client send a token in HTTP headers
+        if (!empty(self::$token)) {
+            // we check token validity
+            $query = self::dbcore('auth_id_by_token');
+            $query->bindParam(':token', self::$token);
+            $query->execute();
+            
+            // si le token est valide
+            if ($query->rowCount() == 1) {
+                $data = $query->fetch();
+                
+                // we store user id
+                self::user($data['id']);
+                self::client($data['client']);
+                
+            } else {
+                // no valid token, please authenticate yourself
+                self::error(403, 'NonValidToken', 'No valid token, please authenticate yourself.');
+            }
+            
+        } else {
+            // if we have no token and no authenticate try
+            self::error(403, 'NoToken', 'No token, please send one or authenticate yourself.');
+        }
+    }
+    
+    
+    /**
+     * Store or create a token and send it to client before stop execution of the script
      * 
      * This method can store a token send by client or create a new token.
      * For a new token, we need to first set static user id property.
@@ -186,7 +207,7 @@ class API
             // we generate an uniqid token
             $token = uniqid(bin2hex(openssl_random_pseudo_bytes(8)), true);
             
-            // we had the token to the core database
+            // we add the token to the core database
             $query = self::dbcore('auth_token_storage');
             $query->bindParam(':token', $token);
             $query->bindParam(':id', self::$user);
@@ -199,6 +220,18 @@ class API
             // else, we store the token
             self::$token = $token;
         }
+        
+        // we add it to the JSON return
+        $tokens = array(
+            '0' => array(
+                'id' => self::$token
+            )
+        );
+        self::add('tokens', $tokens);
+        
+        // we parse and return JSON
+        self::parsing();
+        self::result();
     }
     
     
@@ -227,6 +260,20 @@ class API
     public static function user($user)
     {
         self::$user = $user;
+    }
+    
+    
+    /**
+     * Add a top level object to the result JSON
+     * 
+     * @version 1.0
+     * @param   string  $name       Name of the ressource added
+     * @param   string  $value      Value of the ressource added
+     * @result  void
+     */
+    
+    public static function add($name, $value) {
+        self::$data[$name] = $value;
     }
     
     
@@ -275,30 +322,21 @@ class API
     {
         // we initiate JSON array
         $json = array();
-        /*
-        // if we have a token, we add token in json response
-        if (!empty(self::$token)) {
-            // we create a chain by client hostname & token concatenation
-            $chain = base64_encode(self::$client . ':' . self::$token);
-
-            // we add this chain to the JSON result array
-            $json['token'] = $chain;
-        }*/
         
         switch (self::$success) {
             case true:
                 // we check if we have informations to send
-                if (count(self::$data)) { $json['data'] = self::$data; }
+                if (count(self::$data)) { $json = self::$data; }
                 
                 break;
             
             case false:
+                // we check if we have informations to send
+                if (count(self::$data)) { $json = self::$data; }
+                
                 // if API call returns an error, we parse error's informations in JSON
                 $json['errors'] = self::$errors;
-                
-                // we check if we have informations to send
-                if (count(self::$data)) { $json['data'] = self::$data; }
-                
+                                
                 break;
         }
         
@@ -317,6 +355,11 @@ class API
             if (isset($_SERVER['PHP_AUTH_USER'])) {
                 $json['debug']['auth']['user'] = $_SERVER['PHP_AUTH_USER'];
                 $json['debug']['auth']['pass'] = $_SERVER['PHP_AUTH_PW'];
+            }
+            
+            // if we stored a token
+            if (!empty(self::$token)) {
+                $json['debug']['token'] = self::$token;
             }
             
             // we get all headers
@@ -357,6 +400,9 @@ class API
     
             // we display json string
             print(self::$json);
+            
+            // we stop script execution
+            exit;
         }
     }
 }
