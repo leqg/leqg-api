@@ -155,7 +155,8 @@ class API
                 
             } else {
                 // if we have no token and no authentification try
-                self::error(403, 'NoToken', 'No token, please send one or authenticate yourself.');
+                header('WWW-Authenticate: Basic realm="LeQG App Authorization"');
+                self::error(401, 'NoToken', 'No token, please send one or authenticate yourself.');
             }
             
         } else {
@@ -350,5 +351,7 @@ class API
 
         // we display json string
         print_r(self::$json);
+        
+        // 
     }
 }
