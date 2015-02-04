@@ -19,6 +19,7 @@ header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Headers: authorization');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
+header('Access-Control-Max-Age: 3600');
 
 // We set autoload class
 function __autoload($class)
