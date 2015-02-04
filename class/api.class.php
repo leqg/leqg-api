@@ -117,12 +117,12 @@ class API
                     
                 } else {
                     // password not matching
-                    self::error(403, 'BadPW', 'Wrong password');
+                    self::error(401, 'BadPW', 'Wrong password');
                 }
                 
             } else {
                 // no user found
-                self::error(403, 'NoUser', 'User not found');
+                self::error(401, 'NoUser', 'User not found');
             }
             
         } elseif (!isset($headers['X-Debug'])) {
@@ -150,7 +150,7 @@ class API
                     
                 } else {
                     // no valid token, please authentificate yourself
-                    self::error(403, 'NonValidToken', 'No valid token, please authenticate yourself.');
+                    self::error(401, 'NonValidToken', 'No valid token, please authenticate yourself.');
                 }
                 
             } else {
