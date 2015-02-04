@@ -22,7 +22,7 @@ class Core
     public static function debug($object, $end = true)
     {
         // First we display a pre tag
-        echo '<pre class="nowrap">';
+        //echo '<pre class="nowrap">';
         
         // We search the best way to display object's content by its type
         $type = gettype($object);
@@ -41,7 +41,7 @@ class Core
         }
         
         // We close the pre tag
-        echo '</pre>';
+        //echo '</pre>';
         
         // If asked, we end script execution
         if ($end) die;

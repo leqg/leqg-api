@@ -20,19 +20,38 @@ function __autoload($class)
 {
     require_once 'class/' . strtolower($class) . '.class.php';
 }
+
+// We initiate API processing
+API::init();
  
 // We load configuration file
 $configuration = parse_ini_file('config.ini', true);
 
-// Connecting to MySQL DB
-$dsn = 'mysql:host=' . $configuration['db']['host'] . ';dbname=' . $configuration['db']['base'] . ';charset=utf8';
-$link = new PDO($dsn, $configuration['db']['user'], $configuration['db']['pass']);
+// We prepare the data source name information for LeQG Core MySQL DB
+$dsn['core'] = 'mysql:host=' . $configuration['core']['host'] . ';port=' . $configuration['core']['port'] . ';dbname=' . $configuration['core']['base'] . ';charset=utf8';
 
-// We save in configuration class the SQL link
-Configuration::write('db.link', $link);
+// We try to connect the script to the LeQG Core MySQL DB
+try {
+    $dbh['core'] = new PDO($dsn['core'], $configuration['core']['user'], $configuration['core']['pass']);
 
-// We initiate API processing
-API::init();
+    // We save in configuration class the SQL link
+    Configuration::write('db.core', $dbh['core']);
+} catch (PDOException $e) {
+    // We store SQL connection error into the API result
+    API::error(503, 'Can not connect to the central authentication server.');
+    
+    // We parse and send JSON API content
+    API::parsing();
+    API::result();
+    
+    exit;
+}
+
+// We check if authorization is asked
+if (!isset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW'])) {
+    // if it is, we check authentification information
+    API::auth();
+}
 
 // We parse API result to JSON format
 API::parsing();
