@@ -402,7 +402,7 @@ class API
             header('ETag: ' . md5(self::$json));
     
             // we display json string
-            print(self::$json);
+            print(self::$json.PHP_EOL);
             
             // we stop script execution
             exit;
