@@ -1,0 +1,1 @@
+SELECT `id` FROM `token` WHERE `token` = :token AND ( `begin` <= NOW() AND `end` >= NOW() )

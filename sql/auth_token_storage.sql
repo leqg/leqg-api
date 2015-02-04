@@ -1,0 +1,1 @@
+INSERT INTO `token` (`token`, `id`, `begin`, `end`) VALUES (:token, :id, NOW(), ADDDATE(NOW(), INTERVAL 4 HOUR));

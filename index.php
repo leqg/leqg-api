@@ -47,11 +47,8 @@ try {
     exit;
 }
 
-// We check if authorization is asked
-if (isset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW'])) {
-    // if it is, we check authentification information
-    API::auth();
-}
+// We check if authorization is asked or if a valid token exist
+API::auth();
 
 // We parse API result to JSON format
 API::parsing();
