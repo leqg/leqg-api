@@ -15,6 +15,9 @@ setlocale(LC_TIME, 'fr_FR.UTF-8', 'fr_FR', 'fr');
 // We set encodage
 header('Content-Type: application/json; charset=utf-8');
 
+// We allow cross domain request
+header('Access-Control-Allow-Origin: *');
+
 // We set autoload class
 function __autoload($class)
 {
