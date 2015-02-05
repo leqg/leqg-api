@@ -22,6 +22,8 @@ class Contact
         if (isset(API::$module[1])) {
             // we launch rounting method
             self::routing();
+        } else {
+            API::error(404, 'UnknownModule', 'Vous demandez un module qui n\'existe pas');
         }
     }
     
@@ -36,7 +38,7 @@ class Contact
     private function routing()
     {
         // we check if one contact is asked (contact/{id})
-        if (is_numeric(API::$module[1])) {
+        if (isset(API::$module[1]{0}) && is_numeric(API::$module[1]{0})) {
             // we check if client asked a submodule
             if (isset(API::$module[2])) {
                 if (API::$module[2] == 'coordonnee') {
@@ -49,19 +51,32 @@ class Contact
                 }
                 
             } else {
-                // we return contact informations
-                self::contact(API::$module[1]);
+                $contacts = explode(',', API::$module[1]);
+                
+                // we check that each contact asked is an id
+                foreach ($contacts as $contact) { if (!is_numeric($contact)) { API::error(404, 'UnknownModule', 'Vous demandez un module qui n\'existe pas'); } }
+                
+                // we return contact informations for each asked contact
+                foreach ($contacts as $contact) {
+                    self::contact($contact);
+                }
             }
             
         // we check if client asked for a list of contacts
         } else {
-            $contacts = explode(',', API::$module[1]);
-            
-            // we check that each contact asked is an id
-            foreach ($contacts as $contact) { if (!is_numeric($contact)) { API::error(404, 'UnknownModule', 'Vous demandez un module qui n\'existe pas'); } }
-            
-            foreach ($contacts as $contact) {
-                self::contact($contact);
+            // we check if we have an argument asked by client
+            if (!empty($_SERVER['QUERY_STRING'])) {
+                $args = explode('&', $_SERVER['QUERY_STRING']);
+                
+                foreach ($args as $arg) {
+                    $query = explode('=', $arg);
+                    
+                    if ($query[0] == 'search') { self::search($query[1]); }
+                }
+                
+            // if we have any request, 404 Error
+            } else {
+                API::error(404, 'UnknownModule', 'Vous demandez un module qui n\'existe pas');
             }
         }
     }
@@ -143,6 +158,39 @@ class Contact
     
     
     /**
+     * Return civil status of an asked contact
+     *
+     * @version 1.0
+     * @param   int     $id         Contact ID
+     * @return  array               Contact civil status
+     */
+    
+    public static function civilstatus($id)
+    {
+        // we load informations from database
+        $query = API::query('contact_civilstatus');
+        $query->bindParam(':id', $id, PDO::PARAM_INT);
+        $query->execute();
+        
+        // if we found a contact
+        if ($query->rowCount() == 1) {
+             // Yay! we have a contact!
+            API::response(200);
+            
+            // we load contact informations
+            $data = $query->fetch(PDO::FETCH_ASSOC);
+            $data['url'] = Configuration::read('url').'contact/'.$id;
+            
+            API::add('contacts', $data);
+            
+        } else {
+            // we display an error
+            API::error(404, 'ContactUnknown', 'Le contact demandé n\'existe pas.');
+        }
+   }
+    
+    
+    /**
      * Return contact detail data informations
      *
      * @version 1.0
@@ -180,6 +228,37 @@ class Contact
         } else {
             // we display an error
             API::error(404, 'ContactDetailUnknown', 'L\'élément de contact demandé n\'existe pas.');
+        }
+    }
+    
+    
+    /**
+     * Contact search method
+     *
+     * @version 1.0
+     * @param   string  $search     Search terms
+     * @return  array               Found contacts ID
+     */
+    
+    public static function search($search)
+    {
+        // search term formatting
+        $search = '%'.preg_replace('#[^[:alpha:]]#u', '%', trim($search)).'%';
+        
+        // we search in database
+        $query = API::query('contact_search');
+        $query->bindParam(':search', $search);
+        $query->execute();
+        
+        if ($query->rowCount()) {
+            foreach ($query->fetchAll(PDO::FETCH_ASSOC) as $contact) {
+                self::civilstatus($contact['id']);
+            }
+            
+            API::response(200);
+           
+        } else {
+            API::response(200);
         }
     }
 }

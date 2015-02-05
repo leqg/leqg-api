@@ -99,6 +99,8 @@ class API
             $$module = new $module();
         } elseif (!empty(self::$module[0])) {
             API::error(404, 'UnknownModule', 'Vous demandez un module qui n\'existe pas');
+        } else {
+            API::error(404, 'UnknownModule', 'Vous demandez un module qui n\'existe pas');
         }
     }
     
