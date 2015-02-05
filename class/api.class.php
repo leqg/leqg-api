@@ -70,7 +70,7 @@ class API
         
         // we check if an authenticate is asked or if client have a valid token
         if (isset(self::$module[0]) && self::$module[0] == 'authenticate') {
-            self::auth(); break;
+            self::auth();
         } else {
             self::token_auth();
         }
@@ -188,8 +188,10 @@ class API
             }
             
         } else {
-            // no connection data found
-            self::error(401, 'NoUserPW', 'We did not receive user and password information');
+            // we check if token is already good
+            self::token_auth(); 
+            self::parsing(); 
+            self::result();
         }
     }
     
