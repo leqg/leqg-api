@@ -68,9 +68,27 @@ class API
         
         // we check if an authenticate is asked or if client have a valid token
         if (isset(self::$module[0]) && self::$module[0] == 'authenticate') {
-            self::auth();
+            self::auth(); break;
         } else {
             self::token_auth();
+        }
+        
+        // we try connection to bdd client
+        $dsn['client'] = 'mysql:host=' . Configuration::read('db.host') . ';port=' . Configuration::read('db.port') . ';dbname=leqg_' . self::$client . ';charset=utf8';
+
+        // We try to connect the script to the LeQG Core MySQL DB
+        try {
+            $dbh['client'] = new PDO($dsn['client'], Configuration::read('db.user'), Configuration::read('db.pass'));
+        
+            // We save in configuration class the SQL link
+            Configuration::write('db.client', $dbh['client']);
+            
+        } catch (PDOException $e) {
+            // We store SQL connection error into the API result
+            API::error(503, 'SQLConnectionFail', 'Can not connect to the client database server.');
+            
+            // We stop script execution
+            exit;
         }
         
         // we launch client asked module 
@@ -105,7 +123,7 @@ class API
     
     public static function query($sql)
     {
-        return Configuration::read('db.core')->prepare(file_get_contents("sql/$sql.sql"));
+        return Configuration::read('db.client')->prepare(file_get_contents("sql/$sql.sql"));
     }
     
     
