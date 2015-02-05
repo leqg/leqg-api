@@ -97,9 +97,9 @@ class API
         if (!empty(self::$module[0]) && class_exists(self::$module[0])) {
             $module = self::$module[0];
             $$module = new $module();
-        } elseif (!empty(self::$module[0])) {
+        } elseif (!empty(self::$module[0]) && self::$module[0] != 'authenticate') {
             API::error(404, 'UnknownModule', 'Vous demandez un module qui n\'existe pas');
-        } else {
+        } elseif (empty(self::$module[0])) {
             API::error(404, 'UnknownModule', 'Vous demandez un module qui n\'existe pas');
         }
     }
@@ -189,9 +189,7 @@ class API
             
         } else {
             // we check if token is already good
-            self::token_auth(); 
-            self::parsing(); 
-            self::result();
+            self::token_auth();
         }
     }
     
