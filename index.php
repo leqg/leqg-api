@@ -41,6 +41,7 @@ $configuration = parse_ini_file('config.ini', true);
 
 // We store token name into Configuration datas
 Configuration::write('token', $configuration['token']['name']);
+Configuration::write('url', $configuration['url']['base']);
 Configuration::write('db.host', $configuration['core']['host']);
 Configuration::write('db.port', $configuration['core']['port']);
 Configuration::write('db.user', $configuration['core']['user']);

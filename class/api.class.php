@@ -14,6 +14,7 @@ class API
      * @val     string  $json       JSON array to send
      * @val     bool    $errors     Errors informations
      * @val     array   $data       Informations to send, before JSON formatting
+     * @val     array   $links      Links description to send before JSON formatting
      * @val     bool    $success    API call status (true success, false error)
      * @val     int     $response   HTTP response code to send with JSON
      * @val     array   $headers    HTTP header request
@@ -22,6 +23,7 @@ class API
      */
     private static $token, $user, $client, $json;
     private static $data = array();
+    private static $links = array();
     private static $errors = array();
     private static $success = true;
     private static $response = 202;
@@ -261,9 +263,7 @@ class API
         
         // we add it to the JSON return
         $tokens = array(
-            '0' => array(
-                'id' => self::$token
-            )
+            'id' => self::$token
         );
         self::add('tokens', $tokens);
         
@@ -307,11 +307,58 @@ class API
      * @version 1.0
      * @param   string  $name       Name of the ressource added
      * @param   string  $value      Value of the ressource added
+     * @param   string  $key        Key of the ressource added
      * @result  void
      */
     
-    public static function add($name, $value) {
-        self::$data[$name] = $value;
+    public static function add($name, $value, $key = null) {
+        if ($name != 'links') {
+            if (is_null($key)) {
+                self::$data[$name][] = $value;
+            } else {
+                self::$data[$name][$key] = $value;
+            }
+        }
+    }
+    
+    
+    /**
+     * Describe a new links for top-level links informations
+     * 
+     * @version 1.0
+     * @param   string  $toplevel   Name of the top level element
+     * @param   string  $link       Name of the linked element
+     * @param   string  $type       Type of the linked element
+     * @param   string  $href       URL of the linked element
+     * @result  void
+     */
+    
+    public static function link($toplevel, $link, $type, $href = null) {
+        if (is_null($href)) {
+            self::$links[$toplevel.'.'.$link] = array(
+                'href' => Configuration::read('url').$type.'/{'.$toplevel.'.'.$link.'}',
+                'type' => $type
+            );
+        } else {
+            self::$links[$toplevel.'.'.$link] = array(
+                'href' => Configuration::read('url').$href.'{'.$toplevel.'.'.$link.'}',
+                'type' => $type
+            );
+        }
+    }
+    
+    
+    /**
+     * Store a new response code
+     * 
+     * @version 1.0
+     * @param   string  $name       Response code to store
+     * @param   string  $value      Value of the ressource added
+     * @result  void
+     */
+    
+    public static function response($http_response) {
+        self::$response = $http_response;
     }
     
     
@@ -363,8 +410,16 @@ class API
         
         switch (self::$success) {
             case true:
+                if (count(self::$links)) { $links['links'] = self::$links; }
+            
                 // we check if we have informations to send
-                if (count(self::$data)) { $json = self::$data; }
+                if (count(self::$links) && count(self::$data)) {
+                    $json = array_merge($links, self::$data);
+                } elseif (count(self::$links)) {
+                    $json = $links;
+                } else {
+                    $json = self::$data;
+                }
                 
                 break;
             
