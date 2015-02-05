@@ -72,6 +72,12 @@ class API
         } else {
             self::token_auth();
         }
+        
+        // we launch client asked module 
+        if (!empty(self::$module[0]) && class_exists(self::$module[0])) {
+            $module = self::$module[0];
+            $$module = new $module();
+        }
     }
     
     

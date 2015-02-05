@@ -24,7 +24,16 @@ header('Access-Control-Max-Age: 3600');
 // We set autoload class
 function __autoload($class)
 {
-    require_once 'class/' . strtolower($class) . '.class.php';
+    // We load all file classes
+    $classes = scandir('class/');
+    unset($classes[0], $classes[1]);
+    if (in_array('index.html', $classes)) { $cle = array_search('index.html', $classes); unset($classes[$cle]); }
+    
+    if (in_array(strtolower($class) . '.class.php', $classes)) {
+        include 'class/' . strtolower($class) . '.class.php';
+    } else {
+        return false;
+    }
 }
  
 // We load configuration file
