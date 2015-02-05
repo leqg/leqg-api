@@ -52,6 +52,17 @@ class Contact
                 // we return contact informations
                 self::contact(API::$module[1]);
             }
+            
+        // we check if client asked for a list of contacts
+        } else {
+            $contacts = explode(',', API::$module[1]);
+            
+            // we check that each contact asked is an id
+            foreach ($contacts as $contact) { if (!is_numeric($contact)) { API::error(404, 'UnknownModule', 'Vous demandez un module qui n\'existe pas'); } }
+            
+            foreach ($contacts as $contact) {
+                self::contact($contact);
+            }
         }
     }
     
