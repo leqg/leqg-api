@@ -242,13 +242,27 @@ class Contact
     
     public static function search($search)
     {
-        // search term formatting
-        $search = '%'.preg_replace('#[^[:alpha:]]#u', '%', trim($search)).'%';
+        $date = DateTime::createFromFormat('d/m/Y', $search);
         
-        // we search in database
-        $query = API::query('contact_search');
-        $query->bindParam(':search', $search);
-        $query->execute();
+        // we check if search terms are or not a birth date
+        if ($date) {
+            // we format date
+            $search = $date->format('Y-m-d');
+            
+            // we search all contacts with birthday on search date
+            $query = API::query('contact_search_birth');
+            $query->bindParam(':search', $search);
+            $query->execute();
+            
+        } else {
+            // search term formatting
+            $search = '%'.preg_replace('#[^[:alpha:]]#u', '%', trim($search)).'%';
+            
+            // we search in database
+            $query = API::query('contact_search');
+            $query->bindParam(':search', $search);
+            $query->execute();
+        }
         
         if ($query->rowCount()) {
             foreach ($query->fetchAll(PDO::FETCH_ASSOC) as $contact) {
