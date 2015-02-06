@@ -62,6 +62,13 @@ class Contact
                     foreach ($details as $detail) {
                         self::contact_detail(API::$module[1], $detail);
                     }
+                    
+                } elseif (API::$module[2] == 'interaction') {
+                    $events = explode(',', API::$module[3]);
+                    
+                    foreach ($events as $event) {
+                        self::interaction(API::$module[1], $event);
+                    }
                 }
                 
             } else {
@@ -140,6 +147,17 @@ class Contact
                 if (count($detail_data['fixe'])) { $data['links']['fixe'] = $detail_data['fixe']; }
             }
             
+            // we search contact's interactions
+            $query = API::query('contact_interactions');
+            $query->bindParam(':contact', $id, PDO::PARAM_INT);
+            $query->execute();
+            
+            // if we found at least one interaction
+            if ($query->rowCount()) {
+                $events = $query->fetchAll(PDO::FETCH_ASSOC);
+                foreach ($events as $event) { $data['links']['interactions'][] = $event['id']; }
+            }
+            
             // we prepare top-level links description
             API::link('contacts', 'adresse_electorale', 'immeuble', 'cartographie/adresse/');
             API::link('contacts', 'adresse_declaree', 'immeuble', 'cartographie/adresse/');
@@ -147,6 +165,7 @@ class Contact
             API::link('contacts', 'email', 'coordonnee', 'contact/{contacts.id}/coordonnee/');
             API::link('contacts', 'mobile', 'coordonnee', 'contact/{contacts.id}/coordonnee/');
             API::link('contacts', 'fixe', 'coordonnee', 'contact/{contacts.id}/coordonnee/');
+            API::link('contacts', 'interactions', 'interaction', 'contact/{contacts.id}/interaction/');
            
             // we add contact information to JSON response
             API::add('contacts', $data);
@@ -274,6 +293,59 @@ class Contact
            
         } else {
             API::response(200);
+        }
+    }
+    
+    
+    /**
+     * Return informations about an interaction
+     * 
+     * @version 1.0
+     * @param   int     $contact        Contact ID
+     * @param   int     $id             Interaction ID
+     * @return  void
+     */
+    
+    public function interaction($contact, $id)
+    {
+        // we search interaction data
+        $query = API::query('contact_interaction');
+        $query->bindParam(':event', $id, PDO::PARAM_INT);
+        $query->bindParam(':contact', $contact, PDO::PARAM_INT);
+        $query->execute();
+        
+        // we check if wa have an answer
+        if ($query->rowCount() == 1) {
+            // Yay! we have a contact detail!
+            API::response(200);
+            
+            // we load contact informations
+            $data = $query->fetch(PDO::FETCH_ASSOC);
+            
+            // we put contact into links section
+            $data['links']['contact'] = $data['contact'];
+            API::link('interactions', 'contact', 'contact');
+            unset($data['contact']);
+            
+            // we put directory data into links section, if exists
+            if (!is_null($data['dossier'])) {
+                $data['links']['dossier'] = $data['dossier'];
+                API::link('interactions', 'dossier', 'dossier');
+                unset($data['dossier']);
+            } else {
+                unset($data['dossier']);
+            }
+            
+            // we put user data into links section
+            $data['links']['utilisateur'] = $data['utilisateur'];
+            API::link('interactions', 'utilisateur', 'utilisateur');
+            unset($data['utilisateur']);
+            
+            // we add contact information to JSON response
+            API::add('interactions', $data);
+        } else {
+            // we display an error
+            API::error(404, 'EventUnknown', 'L\'élément d\'historique demandé n\'existe pas.');
         }
     }
 }
