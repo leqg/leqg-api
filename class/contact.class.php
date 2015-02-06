@@ -19,11 +19,25 @@ class Contact
     public function __construct()
     {
         // we check if a submodule is asked
-        if (isset(API::$module[1])) {
+        if (isset(API::$module[1]) && !empty(API::$module[1])) {
             // we launch rounting method
             self::routing();
+            
         } else {
-            API::error(404, 'UnknownModule', 'Vous demandez un module qui n\'existe pas');
+            // we check if we have an argument asked by client
+            if (!empty($_SERVER['QUERY_STRING'])) {
+                $args = explode('&', $_SERVER['QUERY_STRING']);
+                
+                foreach ($args as $arg) {
+                    $query = explode('=', $arg);
+                    
+                    if ($query[0] == 'search') { self::search($query[1]); }
+                }
+                
+            // if we have any request, 404 Error
+            } else {
+                API::error(404, 'UnknownModule', 'Vous demandez un module qui n\'existe pas');
+            }
         }
     }
     
@@ -62,22 +76,9 @@ class Contact
                 }
             }
             
-        // we check if client asked for a list of contacts
+        // else we return an 404 Error
         } else {
-            // we check if we have an argument asked by client
-            if (!empty($_SERVER['QUERY_STRING'])) {
-                $args = explode('&', $_SERVER['QUERY_STRING']);
-                
-                foreach ($args as $arg) {
-                    $query = explode('=', $arg);
-                    
-                    if ($query[0] == 'search') { self::search($query[1]); }
-                }
-                
-            // if we have any request, 404 Error
-            } else {
-                API::error(404, 'UnknownModule', 'Vous demandez un module qui n\'existe pas');
-            }
+            API::error(404, 'UnknownModule', 'Vous demandez un module qui n\'existe pas');
         }
     }
     
