@@ -1,6 +1,6 @@
-SELECT      `contact_id` AS `id`
-FROM        `contacts`
-WHERE       `contact_naissance_date` = :search
-ORDER BY    `contact_nom` ASC,
-            `contact_nom_usage` ASC,
-            `contact_prenoms` ASC
+SELECT      `id`
+FROM        `people`
+WHERE       `date_naissance` = :search
+ORDER BY    `nom` ASC,
+            `nom_usage` ASC,
+            `prenoms` ASC
