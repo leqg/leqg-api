@@ -47,7 +47,7 @@ Configuration::write('db.user', $configuration['core']['user']);
 Configuration::write('db.pass', $configuration['core']['pass']);
 
 // We prepare the data source name information for LeQG Core MySQL DB
-$dsn['core'] = 'mysql:host=' . $configuration['core']['host'] . ';port=' . $configuration['core']['port'] . ';dbname=' . $configuration['core']['base'] . ';charset=utf8';
+$dsn['core'] = 'mysql:host=' . $configuration['core']['host'] . ';port=' . $configuration['core']['port'] . ';dbname=leqg_core;charset=utf8';
 
 // We try to connect the script to the LeQG Core MySQL DB
 try {
