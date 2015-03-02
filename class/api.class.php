@@ -334,18 +334,25 @@ class API
      * @param   string  $link       Name of the linked element
      * @param   string  $type       Type of the linked element
      * @param   string  $href       URL of the linked element
+     * @param   bool    $element    Automaticaly add {id} element at the end
      * @result  void
      */
     
-    public static function link($toplevel, $link, $type, $href = null) {
+    public static function link($toplevel, $link, $type, $href = null, $element = true) {
+        if ($element) {
+            $end = '{'.$toplevel.'.'.$link.'}';
+        } else {
+            $end = '';
+        }
+        
         if (is_null($href)) {
             self::$links[$toplevel.'.'.$link] = array(
-                'href' => Configuration::read('url').$type.'/{'.$toplevel.'.'.$link.'}',
+                'href' => Configuration::read('url').$type.'/'.$end,
                 'type' => $type
             );
         } else {
             self::$links[$toplevel.'.'.$link] = array(
-                'href' => Configuration::read('url').$href.'{'.$toplevel.'.'.$link.'}',
+                'href' => Configuration::read('url').$href.$end,
                 'type' => $type
             );
         }

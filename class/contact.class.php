@@ -116,15 +116,28 @@ class Contact
             // we prepare id & url informations
             $data['url'] = Configuration::read('url').'contact/'.$data['id'];
             
+            // we search all addresses for this contact
+            $query = API::query('contact_addresses');
+            $query->bindParam(':id', $id, PDO::PARAM_INT);
+            $query->execute();
+            
             // we prepare linked informations
             $data['links'] = array(
-                'adresse_electorale' => $data['adresse_electorale'],
-                'adresse_declaree' => $data['adresse_declaree'],
-                'bureau' => $data['bureau_vote']
+                'bureau' => $data['bureau_vote'],
+                'adresse_officiel' => false,
+                'adresse_reel' => false
             );
             
             // we unset old linked informations
-            unset($data['adresse_electorale'], $data['adresse_declaree'], $data['bureau_vote']);
+            unset($data['bureau_vote']);
+            
+            if ($query->rowCount()) {
+                $addresses = $query->fetchAll(PDO::FETCH_ASSOC);
+                
+                foreach ($addresses as $address) {
+                    $data['links']['adresse_'.$address['type']] = true;
+                }
+            }
             
             // we search contact details
             $query = API::query('contact_details');
@@ -159,8 +172,8 @@ class Contact
             }
             
             // we prepare top-level links description
-            API::link('contacts', 'adresse_electorale', 'immeuble', 'cartographie/adresse/');
-            API::link('contacts', 'adresse_declaree', 'immeuble', 'cartographie/adresse/');
+            API::link('contacts', 'adresse_officiel', 'adresse', 'contact/{contacts.id}/adresse/officiel', false);
+            API::link('contacts', 'adresse_reel', 'adresse', 'contact/{contacts.id}/adresse/reel', false);
             API::link('contacts', 'bureau_vote', 'immeuble', 'cartographie/bureau/');
             API::link('contacts', 'email', 'coordonnee', 'contact/{contacts.id}/coordonnee/');
             API::link('contacts', 'mobile', 'coordonnee', 'contact/{contacts.id}/coordonnee/');
